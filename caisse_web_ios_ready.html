@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Fermeture de caisse</title>
+  <meta name="theme-color" content="#111827" />
+  <style>
+    :root{
+      --bg:#f3f4f6; --card:#fff; --text:#111827; --muted:#6b7280;
+      --border:#d1d5db; --accent:#111827; --soft:#f9fafb;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+    .wrap{max-width:1100px;margin:0 auto;padding:14px}
+    h1{margin:0 0 6px;font-size:28px}
+    .sub{color:var(--muted);margin-bottom:14px}
+    .layout{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px}
+    .section-title{font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin:0 0 12px}
+    .info-grid,.mini-grid,.money-wrap{display:grid;gap:10px}
+    .info-grid{grid-template-columns:1fr 1fr}
+    .mini-grid{grid-template-columns:1fr 1fr 1fr}
+    .money-wrap{grid-template-columns:1fr 1fr;margin-top:14px}
+    .field{display:flex;flex-direction:column;gap:6px}
+    .field label{font-size:13px;color:var(--muted);font-weight:700}
+    input{
+      width:100%;padding:12px;border:1px solid var(--border);border-radius:12px;
+      font-size:16px;background:#fff
+    }
+    .toolbar{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+    button{
+      border:none;background:var(--accent);color:#fff;border-radius:12px;
+      padding:12px 16px;font-size:15px;font-weight:700;cursor:pointer
+    }
+    button.secondary{background:#e5e7eb;color:#111827}
+    .summary{display:grid;gap:10px;margin-top:14px}
+    .summary-box,.mini{border:1px solid var(--border);border-radius:14px;padding:12px;background:#fafafa}
+    .summary-box .label,.mini .k{font-size:13px;color:var(--muted);margin-bottom:5px;font-weight:700}
+    .summary-box .value{font-size:30px;font-weight:800}
+    .mini .v{font-size:22px;font-weight:800}
+    .line{display:grid;grid-template-columns:105px 1fr 110px;gap:10px;align-items:center;margin-bottom:10px}
+    .line .label{font-weight:700}
+    .line-total{background:var(--soft);font-weight:700}
+    .tickets{display:grid;gap:12px}
+    .ticket-block{background:#fff;border:1px solid var(--border);border-radius:16px;padding:12px}
+    .ticket-title{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:8px}
+    .ticket{
+      background:#fffef9;border:1px dashed #9ca3af;border-radius:10px;padding:12px;
+      font-family:"Courier New",monospace;white-space:pre-wrap;min-height:180px
+    }
+    .hint{color:var(--muted);font-size:13px;margin-top:10px}
+    @media (max-width:960px){.layout,.money-wrap{grid-template-columns:1fr}}
+    @media (max-width:760px){
+      .info-grid,.mini-grid{grid-template-columns:1fr}
+      .line{grid-template-columns:90px 1fr 95px}
+      .summary-box .value{font-size:26px}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Fermeture de caisse</h1>
+    <div class="sub">Version web iPhone/Android. À ouvrir via un lien dans Safari ou Chrome.</div>
+
+    <div class="layout">
+      <div>
+        <div class="card">
+          <div class="section-title">Informations caisse</div>
+          <div class="info-grid">
+            <div class="field"><label for="magasin">Magasin</label><input id="magasin" type="text" placeholder="Ex : Magasin 0008251"></div>
+            <div class="field"><label for="caisse">Caisse</label><input id="caisse" type="text" value="012"></div>
+            <div class="field"><label for="date">Date</label><input id="date" type="text"></div>
+            <div class="field"><label for="heure">Heure</label><input id="heure" type="text"></div>
+            <div class="field"><label for="fond">Fond de caisse à laisser</label><input id="fond" type="number" min="0" step="0.01" value="200"></div>
+            <div class="field"><label for="responsable">Nom / initiales</label><input id="responsable" type="text" placeholder="Ex : ML"></div>
+          </div>
+
+          <div class="toolbar">
+            <button type="button" id="btnCalculer">Calculer</button>
+            <button type="button" class="secondary" id="btnReset">Réinitialiser</button>
+          </div>
+
+          <div class="summary">
+            <div class="summary-box">
+              <div class="label">Comptage espèces</div>
+              <div class="value" id="totalComptage">0,00 €</div>
+            </div>
+            <div class="mini-grid">
+              <div class="mini"><div class="k">Prélèvement à faire</div><div class="v" id="prelevement">0,00 €</div></div>
+              <div class="mini"><div class="k">Reste en caisse</div><div class="v" id="reste">0,00 €</div></div>
+              <div class="mini"><div class="k">Nombre total d’unités</div><div class="v" id="nbElements">0</div></div>
+            </div>
+          </div>
+
+          <div class="hint">Le plus fiable sur iPhone : ouvrir cette page depuis un lien web, puis “Partager” → “Sur l’écran d’accueil”.</div>
+        </div>
+
+        <div class="money-wrap">
+          <div class="card">
+            <div class="section-title">Billets et pièces</div>
+            <div class="line"><div class="label">1 CTS</div><input id="q1" type="number" min="0" step="1" value="0"><input id="t1" class="line-total" type="text" value="0,00 €" readonly></div>
+            <div class="line"><div class="label">2 CTS</div><input id="q2" type="number" min="0" step="1" value="0"><input id="t2" class="line-total" type="text" value="0,00 €" readonly></div>
+            <div class="line"><div class="label">5 CTS</div><input id="q3" type="number" min="0" step="1" value="0"><input id="t3" class="line-total" type="text" value="0,00 €" readonly></div>
+            <div class="line"><div class="label">10 CTS</div><input id="q4" type="number" min="0" step="1" value="0"><input id="t4" class="line-total" type="text" value="0,00 €" readonly></div>
+            <div class="line"><div class="label">20 CTS</div><input id="q5" type="number" min="0" step="1" value="0"><input id="t5" class="line-total" type="text" value="0,00 €" readonly></div>
+            <div class="line"><div class="label">50 CTS</div><input id="q6" type="number" min="0" step="1" value="0"><input id="t6" class="line-total" type="text" value="0,00 €" readonly></div>
+            <div class="line"><div class="label">1 EUR</div><input id="q7" type="number" min="0" step="1" value="0"><input id="t7" class="line-total" type="text" value="0,00 €" readonly></div>
+            <div class="line"><div class="label">2 EUR</div><input id="q8" type="number" min="0" step="1" value="0"><input id="t8" class="line-total" type="text" value="0,00 €" readonly></div>
+            <div class="line"><div class="label">5 EUR</div><input id="q9" type="number" min="0" step="1" value="0"><input id="t9" class="line-total" type="text" value="0,00 €" readonly></div>
+            <div class="line"><div class="label">10 EUR</div><input id="q10" type="number" min="0" step="1" value="0"><input id="t10" class="line-total" type="text" value="0,00 €" readonly></div>
+            <div class="line"><div class="label">20 EUR</div><input id="q11" type="number" min="0" step="1" value="0"><input id="t11" class="line-total" type="text" value="0,00 €" readonly></div>
+            <div class="line"><div class="label">50 EUR</div><input id="q12" type="number" min="0" step="1" value="0"><input id="t12" class="line-total" type="text" value="0,00 €" readonly></div>
+            <div class="line"><div class="label">100 EUR</div><input id="q13" type="number" min="0" step="1" value="0"><input id="t13" class="line-total" type="text" value="0,00 €" readonly></div>
+            <div class="line"><div class="label">200 EUR</div><input id="q14" type="number" min="0" step="1" value="0"><input id="t14" class="line-total" type="text" value="0,00 €" readonly></div>
+            <div class="line"><div class="label">500 EUR</div><input id="q15" type="number" min="0" step="1" value="0"><input id="t15" class="line-total" type="text" value="0,00 €" readonly></div>
+          </div>
+
+          <div class="card">
+            <div class="section-title">Rouleaux</div>
+            <div class="line"><div class="label">RLX 5 CTS</div><input id="q16" type="number" min="0" step="1" value="0"><input id="t16" class="line-total" type="text" value="0,00 €" readonly></div>
+            <div class="line"><div class="label">RLX 10 CTS</div><input id="q17" type="number" min="0" step="1" value="0"><input id="t17" class="line-total" type="text" value="0,00 €" readonly></div>
+            <div class="line"><div class="label">RLX 20 CTS</div><input id="q18" type="number" min="0" step="1" value="0"><input id="t18" class="line-total" type="text" value="0,00 €" readonly></div>
+            <div class="line"><div class="label">RLX 50 CTS</div><input id="q19" type="number" min="0" step="1" value="0"><input id="t19" class="line-total" type="text" value="0,00 €" readonly></div>
+            <div class="line"><div class="label">RLX 1 EUR</div><input id="q20" type="number" min="0" step="1" value="0"><input id="t20" class="line-total" type="text" value="0,00 €" readonly></div>
+            <div class="line"><div class="label">RLX 2 EUR</div><input id="q21" type="number" min="0" step="1" value="0"><input id="t21" class="line-total" type="text" value="0,00 €" readonly></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tickets">
+        <div class="ticket-block"><div class="ticket-title">Ticket 1 • Comptage</div><div class="ticket" id="ticketComptage"></div></div>
+        <div class="ticket-block"><div class="ticket-title">Ticket 2 • Prélèvement</div><div class="ticket" id="ticketPrelevement"></div></div>
+        <div class="ticket-block"><div class="ticket-title">Ticket 3 • Fond de caisse</div><div class="ticket" id="ticketReste"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const lines = [
+      {qid:'q1', tid:'t1', label:'1 CTS', value:0.01},
+      {qid:'q2', tid:'t2', label:'2 CTS', value:0.02},
+      {qid:'q3', tid:'t3', label:'5 CTS', value:0.05},
+      {qid:'q4', tid:'t4', label:'10 CTS', value:0.10},
+      {qid:'q5', tid:'t5', label:'20 CTS', value:0.20},
+      {qid:'q6', tid:'t6', label:'50 CTS', value:0.50},
+      {qid:'q7', tid:'t7', label:'1 EUR', value:1},
+      {qid:'q8', tid:'t8', label:'2 EUR', value:2},
+      {qid:'q9', tid:'t9', label:'5 EUR', value:5},
+      {qid:'q10', tid:'t10', label:'10 EUR', value:10},
+      {qid:'q11', tid:'t11', label:'20 EUR', value:20},
+      {qid:'q12', tid:'t12', label:'50 EUR', value:50},
+      {qid:'q13', tid:'t13', label:'100 EUR', value:100},
+      {qid:'q14', tid:'t14', label:'200 EUR', value:200},
+      {qid:'q15', tid:'t15', label:'500 EUR', value:500},
+      {qid:'q16', tid:'t16', label:'RLX 5 CTS', value:2.50},
+      {qid:'q17', tid:'t17', label:'RLX 10 CTS', value:4.00},
+      {qid:'q18', tid:'t18', label:'RLX 20 CTS', value:8.00},
+      {qid:'q19', tid:'t19', label:'RLX 50 CTS', value:20.00},
+      {qid:'q20', tid:'t20', label:'RLX 1 EUR', value:25.00},
+      {qid:'q21', tid:'t21', label:'RLX 2 EUR', value:50.00}
+    ];
+
+    function euro(n){ return Number(n).toLocaleString('fr-FR', {style:'currency', currency:'EUR'}); }
+    function two(n){ return Number(n).toFixed(2); }
+    function txt(id){ return (document.getElementById(id)?.value || ''); }
+    function num(id){
+      const raw = (document.getElementById(id)?.value || '0').toString().replace(',', '.');
+      const n = parseFloat(raw);
+      return isNaN(n) ? 0 : n;
+    }
+    function padRight(text, width){ text = String(text); return text.length >= width ? text.slice(0,width) : text + ' '.repeat(width-text.length); }
+    function padLeft(text, width){ text = String(text); return text.length >= width ? text.slice(0,width) : ' '.repeat(width-text.length) + text; }
+
+    function setNow(){
+      const now = new Date();
+      document.getElementById('date').value = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}`;
+      document.getElementById('heure').value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    }
+
+    function ticketHeader(title){
+      const magasin = txt('magasin') || 'Magasin';
+      const caisse = txt('caisse') || '012';
+      return `000119\n${magasin}   Caisse ${caisse}\n--------------------------------\n${title}\n--------------------------------\n`;
+    }
+
+    function ticketFooter(total, extra){
+      const date = txt('date'), heure = txt('heure'), resp = txt('responsable');
+      return `\n--------------------------------\nTOTAL                ${padLeft(two(total),8)}€\n${extra ? extra + '\n' : ''}${date}   ${heure}${resp ? '   ' + resp : ''}`;
+    }
+
+    function calculate(){
+      let total = 0, units = 0;
+      const details = [];
+
+      lines.forEach(line => {
+        const qtyEl = document.getElementById(line.qid);
+        let qty = Math.floor(Math.max(0, num(line.qid)));
+        qtyEl.value = qty;
+        const lineTotal = qty * line.value;
+        document.getElementById(line.tid).value = euro(lineTotal);
+        total += lineTotal;
+        units += qty;
+        if(qty > 0) details.push({label: line.label, qty, total: lineTotal});
+      });
+
+      const fond = num('fond');
+      const prelevement = Math.max(total - fond, 0);
+      const reste = total - prelevement;
+
+      document.getElementById('totalComptage').textContent = euro(total);
+      document.getElementById('prelevement').textContent = euro(prelevement);
+      document.getElementById('reste').textContent = euro(reste);
+      document.getElementById('nbElements').textContent = String(units);
+
+      const comptageLines = details.length
+        ? details.map(d => `${padRight(d.label,11)} x ${padLeft(d.qty,3)} = ${padLeft(two(d.total),8)}`).join('\n')
+        : 'Aucune ligne saisie';
+
+      document.getElementById('ticketComptage').textContent =
+        ticketHeader('Comptage ESPECES') + comptageLines + ticketFooter(total, '');
+
+      document.getElementById('ticketPrelevement').textContent =
+        ticketHeader('Prelevement ESPECES') + `EURO                   = ${padLeft(two(prelevement),8)}` + ticketFooter(prelevement, 'PRELEVEMENT FIN DE JOURNEE');
+
+      document.getElementById('ticketReste').textContent =
+        ticketHeader('Comptage ESPECES') + `EURO                   = ${padLeft(two(reste),8)}` + ticketFooter(reste, 'FOND DE CAISSE');
+
+      try{
+        const state = {
+          magasin: txt('magasin'), caisse: txt('caisse'), date: txt('date'), heure: txt('heure'),
+          fond: txt('fond'), responsable: txt('responsable'),
+          qty: lines.map(l => txt(l.qid))
+        };
+        localStorage.setItem('caisse_web_hebergee_v1', JSON.stringify(state));
+      }catch(e){}
+    }
+
+    function resetForm(){
+      try{ localStorage.removeItem('caisse_web_hebergee_v1'); }catch(e){}
+      document.getElementById('magasin').value = '';
+      document.getElementById('caisse').value = '012';
+      setNow();
+      document.getElementById('fond').value = '200';
+      document.getElementById('responsable').value = '';
+      lines.forEach(l => { document.getElementById(l.qid).value = '0'; document.getElementById(l.tid).value = '0,00 €'; });
+      calculate();
+    }
+
+    function loadState(){
+      try{
+        const raw = localStorage.getItem('caisse_web_hebergee_v1');
+        if(!raw) return;
+        const s = JSON.parse(raw);
+        document.getElementById('magasin').value = s.magasin || '';
+        document.getElementById('caisse').value = s.caisse || '012';
+        document.getElementById('date').value = s.date || document.getElementById('date').value;
+        document.getElementById('heure').value = s.heure || document.getElementById('heure').value;
+        document.getElementById('fond').value = s.fond || '200';
+        document.getElementById('responsable').value = s.responsable || '';
+        if(Array.isArray(s.qty)) lines.forEach((l,i) => document.getElementById(l.qid).value = s.qty[i] || '0');
+      }catch(e){}
+    }
+
+    document.getElementById('btnCalculer').addEventListener('click', calculate);
+    document.getElementById('btnReset').addEventListener('click', resetForm);
+
+    document.querySelectorAll('input').forEach(el => {
+      el.addEventListener('input', calculate);
+      el.addEventListener('change', calculate);
+      el.addEventListener('blur', calculate);
+    });
+
+    setNow();
+    loadState();
+    calculate();
+  </script>
+</body>
+</html>
